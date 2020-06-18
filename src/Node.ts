@@ -11,18 +11,18 @@ interface NodeState {
 	expandedMap?: Record<string, boolean>;
 }
 
-export default class Node {
+export default class Node<T = Record<string, any>> {
 	id: string | number;
 	pid: string | number;
 	leaf: boolean;
-	data: Record<string, any>;
+	data: T;
 	loading: boolean;
 	root: boolean;
 	expanded: boolean;
 	depth: number;
 
 	constructor(
-		data: Record<string, any>,
+		data: T,
 		parentNode: Node | null,
 		options: NodeOptions = {},
 		state: NodeState = {}

@@ -6,24 +6,24 @@ import TreeNode, { renderProps } from "./TreeNode";
 
 export const version = "%VERSION%";
 
-export interface childrenRenderProps {
+export interface childrenRenderProps<T = DataType> {
 	getChildren: () => React.ReactNode;
 	expanded: boolean;
 	loading: boolean;
 	root: boolean;
-	node: Node;
-	data: Record<string, any>;
+	node: Node<T>;
+	data: T;
 }
 
-export interface itemRenderProps {
+export interface itemRenderProps<T = DataType> {
 	expanded: boolean;
 	loading: boolean;
 	leaf: boolean;
-	node: Node;
-	data: Record<string, any>;
+	node: Node<T>;
+	data: T;
 }
 
-export function toMarked(array: any[] = []) {
+export function toMarked(array: any[]) {
 	const marked = Object.create(null);
 
 	array.forEach((value) => {
@@ -35,35 +35,50 @@ export function toMarked(array: any[] = []) {
 
 export type DataType = Record<string, any>;
 export type IdType = string | number;
-export type nodeRenderProps = renderProps;
+export type nodeRenderProps<T> = renderProps<T>;
 
-export interface LoadRenderProps {
+export interface LoadRenderProps<T = DataType> {
 	root: boolean;
 	node: Node;
-	data: Record<string, any>;
+	data: T;
 }
 
-export interface TreeProps {
+export interface TreeProps<T = DataType> {
+	/** 样式前缀 */
 	prefixCls: string;
+	/** 样式名称 */
 	className?: string;
+	/** 样式属性 */
 	style?: React.CSSProperties;
+	/** 树根节点ID */
 	rootId: string | number | null;
+	/** tree 数据结构 id 属性名称 */
 	idField: string;
+	/** tree 数据结构 leaf 属性名称 */
 	leafField: string;
+	/** tree 数据结构 parent 属性名称 */
 	pidField: string;
-	// labelField: string;
-	loadData: (data: DataType, node: Node) => DataType[] | Promise<any>;
+	/** 最大展开层级限制没，默认：99 */
 	maxDepth: number;
+	/** 异步检测耗时机制，超过该时长即认定为异步加载，默认：16 ms */
 	asyncTestDelay: number;
+	/** 已展开的节点ID */
 	expandedIds: (string | number)[];
+	/** Tree数据加载器，必填 */
+	loadData: (data: T, node: Node<T>) => T[] | Promise<any>;
+	/** 自定义TreeNode的render返回 */
 	nodeRender?: (
-		props: nodeRenderProps,
+		props: nodeRenderProps<T>,
 		item: React.ReactNode,
 		children: React.ReactNode
 	) => React.ReactNode;
-	itemRender: (props: itemRenderProps) => React.ReactNode;
-	childrenRender: (props: childrenRenderProps) => React.ReactNode;
-	loadRender?: (props: LoadRenderProps) => React.ReactNode;
+	/** 自定义TreeItem的render返回，必填 */
+	itemRender: (props: itemRenderProps<T>) => React.ReactNode;
+	/** 自定义TreeNode的子节点渲染，一般动画需要使用。*/
+	childrenRender: (props: childrenRenderProps<T>) => React.ReactNode;
+	/** 异步加载时的加载内容返回，默认为：null */
+	loadRender?: (props: LoadRenderProps<T>) => React.ReactNode;
+	/** 自定义Tree容器组件*/
 	rootComponent: React.ElementType;
 }
 
@@ -72,14 +87,13 @@ export interface TreeState {
 	expandedMap: Record<string, boolean>;
 }
 
-export class TreeBasic extends React.Component<TreeProps, TreeState> {
+export class TreeBasic<T = DataType> extends React.Component<TreeProps<T>, TreeState> {
 	static defaultProps = {
 		prefixCls: "rw-tree",
 		rootId: null,
 		idField: "id",
 		leafField: "leaf",
 		pidField: "pid",
-		// labelField: "label",
 		maxDepth: 99, //最大层级99   Number.MAX_VALUE
 		asyncTestDelay: 16,
 		expandedIds: [],
@@ -90,14 +104,14 @@ export class TreeBasic extends React.Component<TreeProps, TreeState> {
 		rootComponent: "div",
 	};
 
-	static getDerivedStateFromProps(nextProps: TreeProps) {
+	static getDerivedStateFromProps<T>(nextProps: TreeProps<T>) {
 		return {
 			expandedIds: nextProps.expandedIds,
-			expandedMap: toMarked(nextProps.expandedIds),
+			expandedMap: toMarked(nextProps.expandedIds || []),
 		};
 	}
 
-	constructor(props: TreeProps) {
+	constructor(props: TreeProps<T>) {
 		super(props);
 
 		this.state = {
@@ -123,17 +137,27 @@ export class TreeBasic extends React.Component<TreeProps, TreeState> {
 		return node;
 	}
 
-	getContext(this: TreeBasic) {
+	getContext(this: TreeBasic<T>) {
 		return {
 			tree: this,
 		};
 	}
 
 	render() {
-		const { prefixCls, className, style, rootComponent: Component, itemRender } = this.props;
+		const {
+			prefixCls,
+			className,
+			style,
+			rootComponent: Component,
+			itemRender,
+			loadData,
+		} = this.props;
 
 		if (!itemRender) {
 			throw new Error("react-widget-tree-basic: itemRender cannot be empty.");
+		}
+		if (!loadData) {
+			throw new Error("react-widget-tree-basic: loadData cannot be empty.");
 		}
 
 		let classes = classNames({

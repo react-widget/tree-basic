@@ -4,17 +4,14 @@ import isPromise from "is-promise";
 import TreeContext, { ContextValue } from "./TreeContext";
 import Node from "./Node";
 
-export interface NodeItemRenderProps {
-	node: Node;
-}
+export type DataType = Record<string, any>;
+export type renderProps<T> = Omit<TreeNodeProps<T>, "render" | "childrenRender">;
 
-export type renderProps = Omit<TreeNodeProps, "render" | "childrenRender">;
-
-export interface TreeNodeProps {
-	node: Node;
+export interface TreeNodeProps<T = DataType> {
+	node: Node<T>;
 	isRoot: boolean;
 	render?: (
-		props: renderProps,
+		props: renderProps<T>,
 		nodeItem: React.ReactNode,
 		children: React.ReactNode
 	) => React.ReactNode;
@@ -24,16 +21,16 @@ export interface TreeNodeState {
 	isLoading: boolean;
 }
 
-class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
+class TreeNode<T> extends React.Component<TreeNodeProps<T>, TreeNodeState> {
 	static defaultProps = {
 		node: {},
 		isRoot: false,
 	};
 
 	static contextType = TreeContext;
-	context: ContextValue;
+	context: ContextValue<T>;
 
-	constructor(props: TreeNodeProps, context: React.ContextType<typeof TreeContext>) {
+	constructor(props: TreeNodeProps<T>, context: React.ContextType<typeof TreeContext>) {
 		super(props, context);
 
 		this.state = {
@@ -49,7 +46,7 @@ class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
 		return tree.props;
 	}
 
-	getNodeList(list: Record<string, any>[]) {
+	getNodeList(list: T[]) {
 		const tree = this.getTree();
 		const { node: pNode } = this.props;
 		const options = this.getTreeProps();
@@ -119,7 +116,7 @@ class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
 		const expanded = !leaf && node.isExpanded();
 
 		if (expanded && node.getDepth() >= maxDepth) {
-			warning(false, `maximum depth: ${maxDepth}`);
+			warning(false, `react-widget-tree-basic: maximum depth: ${maxDepth}`);
 			return null;
 		}
 

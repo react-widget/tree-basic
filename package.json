@@ -1,6 +1,6 @@
 {
 	"name": "react-widget-tree-basic",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "tree-basic",
 	"main": "cjs/index.js",
 	"module": "esm/index.js",
