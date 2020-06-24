@@ -43,7 +43,7 @@ export interface LoadRenderProps<T = DataType> {
 	data: T;
 }
 
-export interface TreeProps<T = DataType> {
+export interface TreeBasicProps<T = DataType> {
 	/** 样式前缀 */
 	prefixCls: string;
 	/** 样式名称 */
@@ -87,7 +87,7 @@ export interface TreeState {
 	expandedMap: Record<string, boolean>;
 }
 
-export class TreeBasic<T = DataType> extends React.Component<TreeProps<T>, TreeState> {
+export class TreeBasic<T = DataType> extends React.Component<TreeBasicProps<T>, TreeState> {
 	static defaultProps = {
 		prefixCls: "rw-tree",
 		rootId: null,
@@ -104,14 +104,14 @@ export class TreeBasic<T = DataType> extends React.Component<TreeProps<T>, TreeS
 		rootComponent: "div",
 	};
 
-	static getDerivedStateFromProps<T>(nextProps: TreeProps<T>) {
+	static getDerivedStateFromProps<T>(nextProps: TreeBasicProps<T>) {
 		return {
 			expandedIds: nextProps.expandedIds,
 			expandedMap: toMarked(nextProps.expandedIds || []),
 		};
 	}
 
-	constructor(props: TreeProps<T>) {
+	constructor(props: TreeBasicProps<T>) {
 		super(props);
 
 		this.state = {

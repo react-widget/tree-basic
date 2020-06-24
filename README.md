@@ -24,7 +24,7 @@ export default () => <TreeBasic loadData={...} itemRender={...} />
 ### Interfaces
 
 ```ts
-export interface TreeProps<T = DataType> {
+export interface TreeBasicProps<T = DataType> {
     /** 样式前缀 */
     prefixCls: string;
     /** 样式名称 */
